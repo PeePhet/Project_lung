@@ -16,9 +16,9 @@ export default function Selected() {
     ];
 
     return (
-        <div className={`w-[30%] h-full flex flex-col items-center gap-y-2 pb-5`}>
-            <h2 className="self-start  flex items-center justify-center h-[10%] text-2xl font-bold "> Please select your symptoms. </h2>
-            <div className="w-full  h-[70%] grid grid-cols-2 justify-items-center items-center gap-2">
+        <div className={`w-[30%] h-auto flex flex-col items-center gap-y-3 max-xs:w-[75%]`}>
+            <h2 className="self-start  h-[10%]  flex items-center justify-center text-2xl font-bold max-xs:text-[18px] mb-3 "> Please select your symptoms. </h2>
+            <div className="w-full h-auto grid grid-cols-2 justify-items-center items-center gap-2">
                 {symptoms_text.map((item, index) => (
                     <Cards
                         key={index}
@@ -31,14 +31,14 @@ export default function Selected() {
                     />
                 ))}
             </div>
-            <h2 className="self-start mt-3 text-2xl font-bold"> Another </h2>
+            <h2 className="self-start mt-3 text-2xl font-bold max-xs:text-[18px] "> Another </h2>
             <label htmlFor="" className="self-center  border-2 rounded-xl px-5 py-2 w-[90%] inset-shadow-xs">
                 <input type="text" className="outline-none w-full " value={anotherSelect ? selectedSymtom : "" }  placeholder="Type something..." onChange={(e)=> {
                     setSelectSymtom(e.target.value as string)
                     setAnotherSelect(true)
                     }} />
             </label>
-            <Link href={"/survey/"+selectedSymtom} className="w-[50%] flex justify-center items-center bg-[#e84d4d] px-5 py-3 rounded-2xl my-5 shadow-2xl inset-shadow-xs text-xl text-white font-bold"> Begin analyse </Link>
+            <Link href={"/survey/"+selectedSymtom} className="w-[50%] max-xs:w-[70%] flex justify-center items-center bg-[#e84d4d] px-5 py-3 rounded-2xl my-5 shadow-2xl inset-shadow-xs text-xl text-white font-bold max-xs:text-[18px] "> Begin analyse </Link>
         </div>
     );
 }

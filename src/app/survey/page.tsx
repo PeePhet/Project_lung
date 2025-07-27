@@ -9,7 +9,9 @@ export default function Survey() {
             <Navbar>
             </Navbar>
             <Sub_main>
-                <Selected/>
+                <div className="w-full h-full flex justify-center items-center ">
+                         <Selected/>
+                </div>
             </Sub_main>
            
         </Main_box>

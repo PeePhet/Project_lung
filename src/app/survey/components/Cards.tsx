@@ -5,7 +5,7 @@ export default function Cards({ src_img, text_str , setSelectSymtomState , symto
   return (
       <div
       tabIndex={0}
-      className="w-full h-full bg-blue-200 flex flex-col hover:bg-blue-500 items-center gap-y-4 justify-center rounded-2xl focus:bg-blue-500 duration-100 cursor-pointer shadow-xl inset-shadow-xs group/item" onClick={()=> {
+      className="w-full  h-full bg-blue-200 flex flex-col hover:bg-blue-500 items-center gap-y-4 py-2 justify-center rounded-2xl focus:bg-blue-500 duration-100 cursor-pointer shadow-xl inset-shadow-xs group/item max-xs:py-2 max-xs:text-[14px]" onClick={()=> {
         setSelectSymtomState(symtom_str)
         setAnotherSelectState(false)
         }}>
@@ -14,8 +14,9 @@ export default function Cards({ src_img, text_str , setSelectSymtomState , symto
           alt=""
           width={100}
           height={100}
+          className="max-xs:w-[60%]"
         />
-        <h2 className="group-hover/item:text-white group-focus/item:text-white"> {text_str}</h2>
+        <h2 className="group-hover/item:text-white group-focus/item:text-white "> {text_str}</h2>
       </div>
 
   );

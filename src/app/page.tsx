@@ -1,31 +1,32 @@
 import Link from "next/link";
-import lung_svg from "../../public/lungs.svg"
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Main_box from "@/components/Main_box";
 import Sub_main from "@/components/Sub_main";
-import Footer_component from "@/components/Footer_component";
 
 export default function Home() {
   return (
     <Main_box>
-        <Navbar>
-        </Navbar>
-      <Sub_main>
-        <div className="flex flex-col items-center gap-y-10">
-          <Image src={lung_svg} alt="" width={250} height={100} />
-          <h1 className="text-2xl font-semibold mt-4">LungSketch</h1>
+      <Navbar>
+      </Navbar>
+      <Sub_main className_custom={"bg-linear-to-b from-[#005166] to-[#01929c]"}>
+        <div className="flex flex-col items-center justify-center gap-y-10 py-10 h-[70%]">
+          <Image src={"/lungs_master.png"} alt="" width={250} height={100} />
+          <h1 className="text-4xl font-semibold mt-4 text-white">LungSketch</h1>
         </div>
+        <div className="w-full h-[30%] flex flex-col items-center justify-center gap-y-5">
+          <Link href={"/survey"} className="w-[25%] max-xs:w-[50%] bg-[#01929c] h-[20%] rounded-xl shadow-xl cursor-pointer flex items-center justify-center text-xl font-bold text-white">
+            <h5 className="text-center"> Let's start it</h5>
+          </Link>
+          <Link href={""} className="w-[25%] max-xs:w-[50%] bg-white h-[20%] rounded-xl shadow-xl cursor-pointer flex items-center justify-center text-xl font-bold ">
+            <button type="button">History</button>
+          </Link>
+
+        </div>
+
       </Sub_main>
-      <Footer_component>
-        <Link href={"/survey"} className="w-[80%] bg-fuchsia-300 h-[20%] rounded-xl shadow-xl cursor-pointer">
-                <h5> Let's start it</h5>
-        </Link>
-        <Link href={""} className="w-[80%] bg-fuchsia-300 h-[20%] rounded-xl shadow-xl cursor-pointer">
-          <button type="button">History</button>
-        </Link>
-      </Footer_component>
+
     </Main_box>
-      
+
   );
 }

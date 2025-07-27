@@ -3,9 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { sendWaveFile } from "@/serverAction/sendSoundWav";
 import { useParams } from 'next/navigation'
+import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import Link from "next/link";
 export default function FullSignalCanvas() {
   // Add these refs:
-
+  const [isAnalyseComplete, setIsAnalyseComplete] = useState<boolean>(false)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fullData, setFullData] = useState<number[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -21,9 +31,9 @@ export default function FullSignalCanvas() {
 
   const router = useParams()
 
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
- 
+
   // Handle recording start/stop
   const toggleRecording = async (shouldStop: boolean) => {
     setRecordState(shouldStop)
@@ -120,47 +130,117 @@ export default function FullSignalCanvas() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center p-6 h-full w-full">
-      <h1 className="text-xl mb-4 font-bold space-x-1.5">{timer}</h1>
-      <h2 className="text-xl mb-4 font-bold">
-        Please put your phone close to your chest and take a deep breath.
-      </h2>
+    <div className="w-[200vw] h-full flex">
+      {showDialog && (
+        <Dialog open={showDialog}>
+          <DialogContent className="[&>button]:hidden">
+            <DialogHeader>
+              <DialogTitle className="text-center flex justify-center items-center">
+                Analysing
+              </DialogTitle>
 
-      <canvas
-        ref={canvasRef}
-        width={1000}
-        height={250}
-        className="rounded-lg shadow w-full"
-      />
-      <div className="flex gap-x-5">
-        <button
-          type="button"
-          onClick={() => toggleRecording(false)}
-          className="mt-4 px-4 py-2 cursor-pointer"
-          disabled={!recordState}
-        >
-          <Image src={`/play-button.svg`} alt="" width={100} height={100} />
-        </button>
-        <button
-          type="button"
-          onClick={() => sendWaveFile(fullData, router?.folder as string)}
-          className="mt-4 px-4 py-2 cursor-pointer"
-        >
-          <Image src={`/record-button.svg`} alt="" width={100} height={100} />
-        </button>
+              <DialogDescription className="text-center">
+                Please wait a minute.
+              </DialogDescription>
 
-        <button
-          type="button"
-          onClick={() => toggleRecording(true)}
-          className="mt-4 px-4 py-2 cursor-pointer"
-          disabled={recordState}
+              <div className="flex items-center justify-center mt-4">
+                {/* Spinner + message */}
+                <svg
+                  className="animate-spin h-5 w-5 mr-3 text-gray-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+                <span>Analyzing your audio...</span>
+              </div>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      )}
+      <div className={` flex flex-col items-center p-6 h-full w-[100vw] ${isAnalyseComplete ? "translate-x-[-100%] invisible" : "translate-x-0 visible"} duration-200 ease-in-out`}>
+        <h1 className="text-xl mb-4 font-bold space-x-1.5">{timer}</h1>
 
-        >
-          <Image src={`/stop-button.svg`} alt="" width={100} height={100} />
-        </button>
-        
+        <h2 className="text-xl mb-4 font-bold">
+          Please put your phone close to your chest and take a deep breath.
+        </h2>
+
+        <canvas
+          ref={canvasRef}
+          width={1000}
+          height={250}
+          className="rounded-lg shadow w-full"
+        />
+        <div className="flex gap-x-5 pt-4">
+          <button
+            type="button"
+            onClick={() => toggleRecording(false)}
+            className=" px-4 py-2 cursor-pointer"
+            disabled={!recordState}
+          >
+            <Image src={`/play-button.svg`} alt="" width={100} height={100} />
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              setShowDialog(true);            // show dialog
+              const res  = await sleep(5000);             // wait 5 seconds
+              if(res){
+                setShowDialog(false);          // hide dialog
+              setIsAnalyseComplete(true);    // mark analysis complete
+              // await sendWaveFile(fullData, router?.folder as string)
+              }
+             
+            }}
+            className=" px-4 py-2 cursor-pointer"
+          >
+            <Image src={`/record-button.svg`} alt="" width={100} height={100} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => toggleRecording(true)}
+            className=" px-4 py-2 cursor-pointer"
+            disabled={recordState}
+
+          >
+            <Image src={`/stop-button.svg`} alt="" width={100} height={100} />
+          </button>
+
+        </div>
+      </div>
+
+      <div className={` flex flex-col items-center p-6 h-full w-[100vw] ${!isAnalyseComplete ? "translate-x-[0] invisible" : "translate-x-[-100%] visible"} duration-200 ease-in-out gap-y-5`}>
+        <h2 className="text-2xl mb-4 font-bold max-xs:text-[20px]">
+          Analyse result.
+        </h2>
+        <Progress className="bg-[#caebed] [&>div]:bg-[#58b9bf] [&>div]:rounded-full  w-[40%] h-[2rem] max-xs:w-[65%]" value={30} />
+        <h3 className="text-2xl"> 60%</h3>
+        <Image src={'/lungs.png'} width={150} height={100} alt="" />
+
+        <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
+          <h5 className="font-bold text-xl text-red-600"> Abnormal sound detected </h5>
+          <p className=""> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quod sunt eum praesentium nemo quia id aperiam ipsa in officiis doloribus excepturi quae, ab molestiae facilis officia amet quam deserunt cum?</p>
+          <Link href={"/survey"} className="w-[25%] h-[4rem] flex items-center justify-center px-2">
+            <Button className="cursor-pointer bg-[#58b9bf]  text-xl "  > Analyse again</Button>
+          </Link>
+        </div>
       </div>
     </div>
+
   );
 }
 
@@ -169,4 +249,11 @@ function formatTime(seconds: number) {
   const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
   const secs = String(seconds % 60).padStart(2, "0");
   return `${hrs}:${mins}:${secs}`;
+}
+
+
+function sleep(ms: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(true), ms);
+  });
 }

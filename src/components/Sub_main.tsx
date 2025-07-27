@@ -1,8 +1,8 @@
 import React from "react";
-
-export default function Sub_main({ children }: { children: React.ReactNode }) {
+import clsx from "clsx";
+export default function Sub_main({ children, className_custom }: { children: React.ReactNode, className_custom?: string | null; }) {
   return (
-    <main className="w-full flex items-center justify-center grow-4 flex-col ">
+    <main className={clsx("w-full grow-4 overflow-hidden", className_custom)}>
       {children}
     </main>
   );
