@@ -6,14 +6,13 @@ import User_info from "./components/User_info";
 import User from "@/models/user";
 import connect from "@/lib/db";
 
-
 type Props = {
-  searchParams: {
-    u?: string;
-  };
-};
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
 
-export default async function History({ searchParams }: Props) {
+
+export default async function History({ params, searchParams }: Props) {
   const user_id = await searchParams;
   const id_u = user_id.u
 
