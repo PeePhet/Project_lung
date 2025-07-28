@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
-  }
+    
+  },
+  devIndicators: false
   
   /* config options here */
 };
