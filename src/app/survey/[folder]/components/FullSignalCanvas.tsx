@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { sendWaveFile } from "@/serverAction/sendSoundWav";
+import { addSymptomToUser, sendWaveFile } from "@/serverAction/sendSoundWav";
 import { useParams } from 'next/navigation'
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,10 @@ import {
 import Link from "next/link";
 export default function FullSignalCanvas() {
   // Add these refs:
+  const [percentProgress, setPercentProgress] = useState<number>(0)
+  const [symtoms, setSymtoms] = useState<string>("")
   const [isAnalyseComplete, setIsAnalyseComplete] = useState<boolean>(false)
+  const [localStr, setLocalStr] = useState<string>("")
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fullData, setFullData] = useState<number[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -28,11 +31,45 @@ export default function FullSignalCanvas() {
   const intervalRef = useRef<number | null>(null);
   const [timer, setTimer] = useState("00:00:00");
   const [recordState, setRecordState] = useState<boolean>(true)
-
   const router = useParams()
+  useEffect(() => {
+    const userId = localStorage.getItem("_id");
+    setLocalStr(userId || "")
+  }, []);
 
   const [showDialog, setShowDialog] = useState(false);
 
+  const coldSymptomAdvice: Record<number, string> = {
+    0: ' Seek immediate medical attention. Your symptoms may indicate a serious condition.',
+    25: ' Rest well, stay hydrated, and consider over-the-counter medicine. See a doctor if symptoms worsen.',
+    50: ' Mild cold symptoms. Monitor your condition, rest, and drink fluids.',
+    75: ' You’re nearly recovered. Maintain a healthy diet and stay warm.',
+    100: ' You’re in good health. Continue maintaining hygiene and a strong immune system.',
+  };
+
+
+  const coldSymptomLevels: Record<number, string> = {
+    0: 'Highly Abnormal',
+    25: 'Abnormal',
+    50: 'Borderline',
+    75: 'Mildly Normal',
+    100: 'Normal',
+  };
+
+  function getColdSymptomLevel(score: number): string {
+    if (score <= 0) return coldSymptomLevels[0];
+    if (score <= 25) return coldSymptomLevels[25];
+    if (score <= 50) return coldSymptomLevels[50];
+    if (score <= 75) return coldSymptomLevels[75];
+    return coldSymptomLevels[100];
+  }
+  function getColdSymptomAdvice(score: number): string {
+    if (score <= 0) return coldSymptomAdvice[0];
+    if (score <= 25) return coldSymptomAdvice[25];
+    if (score <= 50) return coldSymptomAdvice[50];
+    if (score <= 75) return coldSymptomAdvice[75];
+    return coldSymptomAdvice[100];
+  }
 
   // Handle recording start/stop
   const toggleRecording = async (shouldStop: boolean) => {
@@ -197,13 +234,16 @@ export default function FullSignalCanvas() {
             type="button"
             onClick={async () => {
               setShowDialog(true);            // show dialog
-              const res  = await sleep(5000);             // wait 5 seconds
-              if(res){
+              const res: any = await sendWaveFile(fullData, router?.folder as string, localStr)
+              if (res) {
                 setShowDialog(false);          // hide dialog
-              setIsAnalyseComplete(true);    // mark analysis complete
-              // await sendWaveFile(fullData, router?.folder as string)
+                setIsAnalyseComplete(true);    // mark analysis complete
+                setPercentProgress(res?.prediction?.percentage || 0)
+                const symtoms_res = getColdSymptomAdvice(res?.prediction?.percentage || 0)
+                setSymtoms(symtoms_res)
+                await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(res?.prediction?.percentage))
               }
-             
+
             }}
             className=" px-4 py-2 cursor-pointer"
           >
@@ -227,13 +267,13 @@ export default function FullSignalCanvas() {
         <h2 className="text-2xl mb-4 font-bold max-xs:text-[20px]">
           Analyse result.
         </h2>
-        <Progress className="bg-[#caebed] [&>div]:bg-[#58b9bf] [&>div]:rounded-full  w-[40%] h-[2rem] max-xs:w-[65%]" value={30} />
-        <h3 className="text-2xl"> 60%</h3>
+        <Progress className="bg-[#caebed] [&>div]:bg-[#58b9bf] [&>div]:rounded-full  w-[40%] h-[2rem] max-xs:w-[65%]" value={percentProgress} />
+        <h3 className="text-2xl"> {percentProgress}%</h3>
         <Image src={'/lungs.png'} width={150} height={100} alt="" />
 
         <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
           <h5 className="font-bold text-xl text-red-600"> Abnormal sound detected </h5>
-          <p className=""> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quod sunt eum praesentium nemo quia id aperiam ipsa in officiis doloribus excepturi quae, ab molestiae facilis officia amet quam deserunt cum?</p>
+          <p className=""> {symtoms}</p>
           <Link href={"/survey"} className="w-[25%] h-[4rem] flex items-center justify-center px-2">
             <Button className="cursor-pointer bg-[#58b9bf]  text-xl "  > Analyse again</Button>
           </Link>

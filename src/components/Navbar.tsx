@@ -1,11 +1,13 @@
 "use client";
 
-import { usePathname, useParams , useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const [isComplete , setIsComplete] = useState<boolean>(true)
-  const [gotoPath , setGotoPath] = useState<string>("")
+  const [local_id, setLocal_id] = useState<string>("")
+  const [isComplete, setIsComplete] = useState<boolean>(true)
+  const [gotoPath, setGotoPath] = useState<string>("")
   const pathName = usePathname();
   const paramValue = useParams()
   const router = useRouter()
@@ -13,30 +15,38 @@ export default function Navbar() {
   const params = paramValue?.folder as string
   const { str_path, main_or_sub, GotoPath } = path_name_function(topLevelRoute, params);
 
-  useEffect(()=>{
-        if(isComplete){
-            setGotoPath(GotoPath)
-        }else{
-            setGotoPath("/survey/"+params)
-            console.log(gotoPath)
-        }
+  useEffect(() => {
+    if (isComplete) {
+      setGotoPath(GotoPath)
+    } else {
+      setGotoPath("/survey/" + params)
+    }
 
-  },[isComplete ,gotoPath])
+  }, [isComplete, gotoPath])
+
+  useEffect(()=>{
+    const user_id : string | null = localStorage.getItem("_id")
+    setLocal_id(user_id || "")
+  },[])
 
   return (
     <header
       className={`w-full flex ${main_or_sub ? "justify-start" : "justify-center"
-        } bg-[#58b9bf] items-center grow-1 px-4  text-white font-semibold text-xl `}
+        } bg-[#58b9bf] items-center grow-1 px-4  text-white font-semibold text-2xl `}
     >
       {pathName !== "/" && (
         <div className="mr-4 cursor-pointer ">
-          <button className="cursor-pointer" type="button" onClick={()=> {
-                  setIsComplete(!isComplete)
-                  router.push(gotoPath)
+          <button className="cursor-pointer " type="button" onClick={() => {
+            setIsComplete(!isComplete)
+            router.push(gotoPath)
           }}>← Back </button>
         </div>
       )}
+      <Link href={"/history?u="+ local_id} className={`${!main_or_sub ?  "hidden" :  ""}`}>
+        History
+      </Link>
       <h1 className="mx-10"> {str_path} </h1>
+
     </header>
   );
 }
