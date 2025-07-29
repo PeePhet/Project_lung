@@ -241,7 +241,7 @@ export default function FullSignalCanvas() {
                 setPercentProgress(res?.prediction?.percentage || 0)
                 const symtoms_res = getColdSymptomAdvice(res?.prediction?.percentage || 0)
                 setSymtoms(symtoms_res)
-                // await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(res?.prediction?.percentage))
+                await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(res?.prediction?.percentage))
               }
 
             }}
