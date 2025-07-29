@@ -16,6 +16,7 @@ import Link from "next/link";
 export default function FullSignalCanvas() {
   // Add these refs:
   const [percentProgress, setPercentProgress] = useState<number>(0)
+  const [soundDetect, setSoundDetect] = useState<string>("")
   const [symtoms, setSymtoms] = useState<string>("")
   const [isAnalyseComplete, setIsAnalyseComplete] = useState<boolean>(false)
   const [localStr, setLocalStr] = useState<string>("")
@@ -56,6 +57,11 @@ export default function FullSignalCanvas() {
     100: 'Normal',
   };
 
+    const coldSymptomDetect: Record<number, string> = {
+    0: 'Abnormal sound detected',
+    100: 'Normal sound',
+  };
+
   function getColdSymptomLevel(score: number): string {
     if (score <= 0) return coldSymptomLevels[0];
     if (score <= 25) return coldSymptomLevels[25];
@@ -63,6 +69,12 @@ export default function FullSignalCanvas() {
     if (score <= 75) return coldSymptomLevels[75];
     return coldSymptomLevels[100];
   }
+
+    function getColdSymptomDetect(score: number): string {
+    if (score < 100) return coldSymptomDetect[0];
+    return coldSymptomDetect[100];
+  }
+
   function getColdSymptomAdvice(score: number): string {
     if (score <= 0) return coldSymptomAdvice[0];
     if (score <= 25) return coldSymptomAdvice[25];
@@ -236,12 +248,14 @@ export default function FullSignalCanvas() {
               setShowDialog(true);            // show dialog
               const res: any = await sendWaveFile(fullData, router?.folder as string, localStr)
               if (res) {
+                let percentage_value = res?.prediction?.percentage || 0
                 setShowDialog(false);          // hide dialog
                 setIsAnalyseComplete(true);    // mark analysis complete
-                setPercentProgress(res?.prediction?.percentage || 0)
-                const symtoms_res = getColdSymptomAdvice(res?.prediction?.percentage || 0)
+                setPercentProgress(percentage_value)
+                setSoundDetect(getColdSymptomDetect(percentage_value))
+                const symtoms_res = getColdSymptomAdvice(percentage_value)
                 setSymtoms(symtoms_res)
-                await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(res?.prediction?.percentage))
+                await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(percentage_value))
               }
 
             }}
@@ -272,7 +286,7 @@ export default function FullSignalCanvas() {
         <Image src={'/lungs.png'} width={150} height={100} alt="" />
 
         <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
-          <h5 className="font-bold text-xl text-red-600"> Abnormal sound detected </h5>
+          <h5 className={`font-bold text-xl ${percentProgress == 100 ?  "text-green-500"  : "text-red-600"  } `}> {soundDetect} </h5>
           <p className=""> {symtoms}</p>
           <Link href={"/survey"} className="w-[25%] h-[4rem] flex items-center justify-center px-2">
             <Button className="cursor-pointer bg-[#58b9bf]  text-xl "  > Analyse again</Button>
