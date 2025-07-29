@@ -13,7 +13,7 @@ export async function sendWaveFile(data: number[], symtoms: string, userId: stri
     formData.append("file", blob, "audio.wav");
     // formData.append("symtoms", symtoms);
 
-    const response = await fetch("https://92fc1138afc7.ngrok-free.app/predict/", {
+    const response = await fetch("https://predict-lung-disease.onrender.com/predict/", {
       method: "POST",
       body: formData,
     });
