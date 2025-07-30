@@ -32,7 +32,7 @@ export default function Navbar() {
   return (
     <header
       className={`w-full flex ${main_or_sub ? "justify-start" : "justify-center"
-        } bg-[#58b9bf] items-center grow-1 px-4  text-white font-semibold text-2xl `}
+        } bg-[#58b9bf] items-center grow-1 px-4  text-white font-semibold text-[18px] max-xs:h-[5%] `}
     >
       {pathName !== "/" && (
         <div className="mr-4 cursor-pointer ">

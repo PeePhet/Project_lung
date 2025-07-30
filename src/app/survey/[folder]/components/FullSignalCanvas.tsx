@@ -14,12 +14,20 @@ import {
 } from "@/components/ui/dialog"
 import Link from "next/link";
 import { convertWebMToWavBlob } from "@/utlis/encode";
+
+
+type ColdSymptomDetail = {
+  title: string;
+  description: string;
+  possibleDiseases: string[];
+};
+
 export default function FullSignalCanvas() {
   // Add these refs:
   const [BlobAudio, setBlobAudio] = useState<Blob | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
-
+  const [symptomDetail, setSymptomDetail] = useState<ColdSymptomDetail>()
   const [percentProgress, setPercentProgress] = useState<number>(0)
   const [soundDetect, setSoundDetect] = useState<string>("")
   const [symtoms, setSymtoms] = useState<string>("")
@@ -38,6 +46,7 @@ export default function FullSignalCanvas() {
   const [timer, setTimer] = useState("00:00:00");
   const [recordState, setRecordState] = useState<boolean>(true)
   const router = useParams()
+  
   useEffect(() => {
     const userId = localStorage.getItem("_id");
     setLocalStr(userId || "")
@@ -98,6 +107,40 @@ export default function FullSignalCanvas() {
     100: 'Normal sound',
   };
 
+
+  const coldSymptomLevelsDetail: Record<number, {
+    title: string;
+    description: string;
+    possibleDiseases: string[];
+  }> = {
+    100: {
+      title: "Normal",
+      description: "No signs of respiratory abnormalities. Breathing is clear and healthy.",
+      possibleDiseases: []
+    },
+    75: {
+      title: "Wheeze",
+      description: "Mild airway constriction. Wheezing may occur when breathing out.",
+      possibleDiseases: ["Mild Asthma", "Early-stage Bronchitis", "Allergic Rhinitis"]
+    },
+    50: {
+      title: "Crackle",
+      description: "Crackling or popping sounds in the lungs, often during inhalation.",
+      possibleDiseases: ["Bronchitis", "Pneumonia", "Pulmonary Edema"]
+    },
+    25: {
+      title: "Cough",
+      description: "Frequent coughing detected. Could be dry or productive.",
+      possibleDiseases: ["Upper Respiratory Infection", "Flu", "COVID-19", "Allergy"]
+    },
+    0: {
+      title: "Highly Abnormal",
+      description: "Severe respiratory symptoms detected. May involve shortness of breath or chest tightness.",
+      possibleDiseases: ["Severe Pneumonia", "COPD", "Advanced Asthma", "COVID-19 (Severe)"]
+    },
+  };
+
+
   function getColdSymptomLevel(score: number): string {
     if (score <= 0) return coldSymptomLevels[0];
     if (score <= 25) return coldSymptomLevels[25];
@@ -117,6 +160,14 @@ export default function FullSignalCanvas() {
     if (score <= 50) return coldSymptomAdvice[50];
     if (score <= 75) return coldSymptomAdvice[75];
     return coldSymptomAdvice[100];
+  }
+
+  function getColdSymptomDetail(score: number) : ColdSymptomDetail  {
+    if (score <= 0) return coldSymptomLevelsDetail[0];
+    if (score <= 25) return coldSymptomLevelsDetail[25];
+    if (score <= 50) return coldSymptomLevelsDetail[50];
+    if (score <= 75) return coldSymptomLevelsDetail[75];
+    return coldSymptomLevelsDetail[100];
   }
 
   // Handle recording start/stop
@@ -284,7 +335,7 @@ export default function FullSignalCanvas() {
             type="button"
             onClick={async () => {
               setShowDialog(true);            // show dialog
-              if(!BlobAudio) return
+              if (!BlobAudio) return
               const wavBlob = await convertWebMToWavBlob(BlobAudio);
               const res: any = await sendWaveFile(wavBlob, router?.folder as string, localStr)
               if (res) {
@@ -294,7 +345,8 @@ export default function FullSignalCanvas() {
                 setPercentProgress(percentage_value)
                 setSoundDetect(getColdSymptomDetect(percentage_value))
                 const symtoms_res = getColdSymptomAdvice(percentage_value)
-                setSymtoms(symtoms_res)
+                setSymtoms(percentage_value)
+                setSymptomDetail(getColdSymptomDetail(percentage_value))
                 await addSymptomToUser(localStr, symtoms_res, getColdSymptomLevel(percentage_value))
               }
 
@@ -327,6 +379,19 @@ export default function FullSignalCanvas() {
         <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
           <h5 className={`font-bold text-xl ${percentProgress == 100 ? "text-green-500" : "text-red-600"} `}> {soundDetect} </h5>
           <p className=""> {symtoms}</p>
+          <h2 className="text-xl font-semibold">{symptomDetail?.title}</h2>
+          <p className="text-gray-700 mt-2">{symptomDetail?.description}</p>
+
+          { symptomDetail ? symptomDetail?.possibleDiseases?.length > 0 && (
+            <>
+              <h3 className="mt-4 font-medium">Possible Diseases:</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600">
+                {symptomDetail.possibleDiseases.map((disease, index) => (
+                  <li key={index}>{disease}</li>
+                ))}
+              </ul>
+            </>
+          ) : ""}
           <Link href={"/survey"} className="w-[25%] h-[4rem] flex items-center justify-center px-2">
             <Button className="cursor-pointer bg-[#58b9bf]  text-xl "  > Analyse again</Button>
           </Link>
@@ -346,8 +411,3 @@ function formatTime(seconds: number) {
 }
 
 
-function sleep(ms: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(true), ms);
-  });
-}
