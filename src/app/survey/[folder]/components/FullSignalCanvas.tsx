@@ -13,8 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import Link from "next/link";
+import { convertWebMToWavBlob } from "@/utlis/encode";
 export default function FullSignalCanvas() {
   // Add these refs:
+  const [BlobAudio, setBlobAudio] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunks = useRef<Blob[]>([]);
+
   const [percentProgress, setPercentProgress] = useState<number>(0)
   const [soundDetect, setSoundDetect] = useState<string>("")
   const [symtoms, setSymtoms] = useState<string>("")
@@ -38,6 +43,37 @@ export default function FullSignalCanvas() {
     setLocalStr(userId || "")
   }, []);
 
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      mediaRecorderRef.current?.stream.getTracks().forEach(track => track.stop());
+    };
+  }, []);
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = event => {
+      if (event.data.size > 0) {
+        chunks.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks.current, { type: 'audio/webm' });
+      setBlobAudio(blob);
+      chunks.current = [];
+    };
+
+    mediaRecorderRef.current = mediaRecorder;
+    mediaRecorder.start();
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+  };
+
   const [showDialog, setShowDialog] = useState(false);
 
   const coldSymptomAdvice: Record<number, string> = {
@@ -57,7 +93,7 @@ export default function FullSignalCanvas() {
     100: 'Normal',
   };
 
-    const coldSymptomDetect: Record<number, string> = {
+  const coldSymptomDetect: Record<number, string> = {
     0: 'Abnormal sound detected',
     100: 'Normal sound',
   };
@@ -70,7 +106,7 @@ export default function FullSignalCanvas() {
     return coldSymptomLevels[100];
   }
 
-    function getColdSymptomDetect(score: number): string {
+  function getColdSymptomDetect(score: number): string {
     if (score < 100) return coldSymptomDetect[0];
     return coldSymptomDetect[100];
   }
@@ -92,6 +128,7 @@ export default function FullSignalCanvas() {
         accumulatedTimeRef.current += Date.now() - startTimeRef.current;
         startTimeRef.current = null;
       }
+      stopRecording()
       clearInterval(intervalRef.current!);
       intervalRef.current = null;
       cancelAnimationFrame(rafIdRef.current);
@@ -99,6 +136,7 @@ export default function FullSignalCanvas() {
     } else {
       // Start recording
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      startRecording()
       const audioContext = new AudioContext({ sampleRate: 44100 });
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 2048;
@@ -246,7 +284,9 @@ export default function FullSignalCanvas() {
             type="button"
             onClick={async () => {
               setShowDialog(true);            // show dialog
-              const res: any = await sendWaveFile(fullData, router?.folder as string, localStr)
+              if(!BlobAudio) return
+              const wavBlob = await convertWebMToWavBlob(BlobAudio);
+              const res: any = await sendWaveFile(wavBlob, router?.folder as string, localStr)
               if (res) {
                 let percentage_value = res?.prediction?.percentage || 0
                 setShowDialog(false);          // hide dialog
@@ -273,7 +313,6 @@ export default function FullSignalCanvas() {
           >
             <Image src={`/stop-button.svg`} alt="" width={100} height={100} />
           </button>
-
         </div>
       </div>
 
@@ -286,13 +325,14 @@ export default function FullSignalCanvas() {
         <Image src={'/lungs.png'} width={150} height={100} alt="" />
 
         <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
-          <h5 className={`font-bold text-xl ${percentProgress == 100 ?  "text-green-500"  : "text-red-600"  } `}> {soundDetect} </h5>
+          <h5 className={`font-bold text-xl ${percentProgress == 100 ? "text-green-500" : "text-red-600"} `}> {soundDetect} </h5>
           <p className=""> {symtoms}</p>
           <Link href={"/survey"} className="w-[25%] h-[4rem] flex items-center justify-center px-2">
             <Button className="cursor-pointer bg-[#58b9bf]  text-xl "  > Analyse again</Button>
           </Link>
         </div>
       </div>
+
     </div>
 
   );

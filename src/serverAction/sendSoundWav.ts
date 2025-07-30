@@ -2,15 +2,13 @@
 
 import connect from "@/lib/db";
 import User from "@/models/user";
-import { encodeWav16bit } from "@/utils/encodeWav";
 
-export async function sendWaveFile(data: number[], symtoms: string, userId: string) {
+export async function sendWaveFile(blobAudio: Blob, symtoms: string, userId: string) {
   try {
     // Ensure it is converted to Uint8Array
-    const wavBytes = encodeWav16bit(data);
-    const blob = new Blob([wavBytes], { type: "audio/wav" });
     const formData = new FormData();
-    formData.append("file", blob, "audio.wav");
+    formData.append("file", blobAudio, "audio.wav");
+    console.log(formData)
     // formData.append("symtoms", symtoms);
 
     const response = await fetch("https://predict-lung-disease.onrender.com/predict/", {
