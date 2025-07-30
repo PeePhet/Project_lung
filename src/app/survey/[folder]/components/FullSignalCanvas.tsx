@@ -378,7 +378,6 @@ export default function FullSignalCanvas() {
 
         <div className="flex gap-x-5 pt-4 flex-col py-4 items-center justify-center gap-y-5">
           <h5 className={`font-bold text-xl ${percentProgress == 100 ? "text-green-500" : "text-red-600"} `}> {soundDetect} </h5>
-          <p className=""> {symtoms}</p>
           <h2 className="text-xl font-semibold">{symptomDetail?.title}</h2>
           <p className="text-gray-700 mt-2">{symptomDetail?.description}</p>
 
